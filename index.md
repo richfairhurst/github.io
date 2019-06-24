@@ -5,7 +5,7 @@ title:
 
 <div id="name" class="center">Rich Fairhurst</div>
 
-I do computer security. I don't really <a href="/blog">blog</a>, but do sometimes take pictures and do other stuff
+I do computer security. I don't really <a href="/blog">blog</a> anymore, but do sometimes take pictures and do other stuff
 
 <div>
 <ul class="social-links">

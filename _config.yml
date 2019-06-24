@@ -7,7 +7,7 @@ permalink:           pretty
 # Setup
 title:               Rich Fairhurst
 tagline:             'I do stuff. I go places. I write really boring bios'
-description:         'I do stuff. I go places. I write really boring bios'
+description:         'Infrequent ramblings on Cyber Resilience, Risk Management, and Security Leadership'
 url:                 http://www.richfairhurst.co.uk
 baseurl:             ''
 
@@ -20,7 +20,7 @@ author:
 # Custom vars
 version:             1.0.0
 
-gems: [jekyll-paginate]
+plugins: [jekyll-paginate]
 paginate: 2
 paginate_path: "/blog/page:num"
 
