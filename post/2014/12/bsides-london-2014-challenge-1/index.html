@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      BSides London 2014: Challenge 1 &middot;  Rich Fairhurst 
+    
+  </title>
+
+  
+  <link rel="stylesheet" href="/css/poole.css">
+  <link rel="stylesheet" href="/css/syntax.css">
+  <link rel="stylesheet" href="/css/lanyon.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700|PT+Sans:400">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+  <link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/assets/favicon.ico">
+
+  
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body>
+
+    
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item">
+    <p>Infrequent ramblings on Cyber and Security Engineering</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item " href="/">Home</a>
+    <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/about/">About</a>
+      <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/post/">Posts</a>
+      <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/archive/">Archive</a>
+      </nav>
+
+  <div class="sidebar-item">
+    <p>&copy; 2020. All rights reserved.</p>
+  </div>
+</div>
+
+
+    
+    <div class="wrap">
+
+
+      <div class="container content">
+
+<br>
+<div class="post">
+  <h1 class="post-title">BSides London 2014: Challenge 1</h1>
+  <span class="post-date">Dec 14, 2014</span>
+  <p>This year I entered my first BSidesLondon challenge. Each year BSidesLondon post challenges in order to win a ticket to the event. The first challenge was to analyze an executable and shutdown the botnet - and in doing so, get the girl and save the world! (OK I made that last bit up, but it&rsquo;s nice to have a story around it)</p>
+<p>This post was originally my submission but I didn&rsquo;t win&hellip;probably because there are far better people than me submitting reports and in a small way it probably didn&rsquo;t help that I was lazy and didn&rsquo;t bother to decode the password function and just took the password off the stack and shut the botnet down. The good news was that I had a BSides ticket anyway - Yah!.</p>
+<p>Reports -&gt; blog posts don&rsquo;t really sit well together which is why this post has sort of has warped into something stuck in between a report and a post, and pasting data from a PDF into markdown sucks a little so the formatting below isn&rsquo;t great - be warned! In addition since the challenge has now ended the website and IRC channels are unavailable, although I have included suggestions on how to replicate yourself locally were appropriate.</p>
+<p>You can find a copy of the challenge brief <a href="/files/Mission1.pdf">here</a> and the malware file <a href="/files/bot.zip">here</a> (the zipfile password is &lsquo;malware&rsquo; )</p>
+<h3 id="1-executable-details">1. Executable Details</h3>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<h3 id="2-summary-of-functionality">2. Summary of Functionality</h3>
+<p>On startup the executable issues a HTTP GET request to a website to obtain a specific IRC chatroom, and then attempts to connect to one of two IRC servers and join the specific chat room and waits for commands. The executable seems to support the following commands issued in a private message to it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">HELLO
+IDENT
+SHUTDOWN
+</code></pre></div><p>No additional files were downloaded, nor does the executable attempt to install or hide itself within the host operating system and can be easily killed via the task manager.</p>
+<h3 id="3-anti-analysis-and-packer-stages">3. Anti-Analysis and Packer Stages</h3>
+<p>Malware authors employ various strategies in an attempt to thwart analysis. The executable was reviewed for the presence of any anti-analysis techniques and the following sections detail what was discovered.</p>
+<h3 id="31-pe-header-review">3.1 PE Header review</h3>
+<p>A common approach often used to prevent ‘static’ analysis is to ‘pack’ the executable. This is where the executable is compressed so that all that is actually viewable is the compressed format which hides the true code of the executable. When the executable is run, a small wrapper program embedded at the start of the executable runs to decompress the rest of the packed file.</p>
+<p>The PE file format stores interesting information within the headers of the executable that can help identify if the executable has been ‘packed’. PEiD, PE Explorer and PEView are applications that allow review of these headers. Of most interest is the IMAGE_FILE_HEADER and the SECTION headers. Using these tools it is possible to review and determine the names and size of the file headers.</p>
+<p>The IMAGE_FILE_HEADER provides a clue to the date and time the executive was created as it contains a ‘time date stamp’ item. This date and time is only suggestive as compilers can set this time to be anything they wish (however it can be useful when reviewing multiple files to determine if there is a correlation - a very close compile time might suggest that the files were created at the same time)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">Bot<span style="color:#f92672">.</span>exe has a date time stamp of: <span style="color:#ae81ff">2014</span><span style="color:#f92672">/</span><span style="color:#ae81ff">02</span><span style="color:#f92672">/</span><span style="color:#ae81ff">13</span> Thu <span style="color:#ae81ff">14</span>:<span style="color:#ae81ff">54</span>:<span style="color:#ae81ff">24</span> UTC
+</code></pre></div><p>The following table shows the PE sections size as shown by PEView. Note that the size of raw data and the virtual size are not aligned which strongly suggests that some ‘packing’ has taken place, and that at runtime the UPX sections will be ‘unpacked’. The section naming also provided evidence that a packer has been used. Normal PE Header sections are .text .data .rdata, and .rsrc</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<h3 id="32-upx-packed">3.2 UPX Packed</h3>
+<p>UPX is available from <a href="http://upx.sourceforge.net">http://upx.sourceforge.net</a> and according to the website clams to be the “Ultimate Packer for eXecutables”. The UPX program offers the ability to pack as well as unpack any previously packed executables so unpacking is simply a case of running the executable through UPX with the -d flag to decompress using the following command:</p>
+<p><img src="/images/malware1.png" alt="My helpful screenshot"></p>
+<p>Having run this command the original PE header section are visible and the file can be decompiled and investigated further:</p>
+<p><img src="/images/malware2.png" alt="My helpful screenshot"></p>
+<p>Having &lsquo;unpacked&rsquo; the executable we are now able to examine the uncompressed code.</p>
+<p>The Linux strings command returns each string of printable characters in a given file. It is used to determine the contents of and to extract text from binary files. (Additional information on the strings commands can be found at <a href="http://www.linfo.org/strings.html">http://www.linfo.org/strings.html</a>. Running strings against the executable returned:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">http:<span style="color:#f92672">//</span>ghowen<span style="color:#f92672">.</span>me<span style="color:#f92672">/</span>malfor<span style="color:#f92672">/</span>cnc<span style="color:#f92672">.</span>php<span style="color:#960050;background-color:#1e0010">?</span>id<span style="color:#f92672">=</span>
+<span style="color:#f92672">&amp;</span>uid<span style="color:#f92672">=</span>
+<span style="color:#ae81ff">6667</span>
+malfor
+uop
+<span style="color:#f92672">%</span>s<span style="color:#f92672">%</span>d
+misery mystery
+USER <span style="color:#f92672">%</span>s <span style="color:#ae81ff">0</span> <span style="color:#f92672">*</span> :<span style="color:#f92672">%</span>s
+NICK <span style="color:#f92672">%</span>s
+Anti<span style="color:#f92672">-</span>debug
+No malware here, honest guv<span style="color:#960050;background-color:#1e0010">!</span>
+PING
+<span style="color:#ae81ff">001</span>
+Resistance <span style="color:#f92672">is</span> futile
+bubblegum
+MODE <span style="color:#f92672">%</span>s <span style="color:#f92672">+</span>i
+JOIN <span style="color:#f92672">%</span>s <span style="color:#f92672">%</span>s
+MODE <span style="color:#f92672">%</span>s <span style="color:#f92672">+</span>k <span style="color:#f92672">%</span>s
+TOPIC <span style="color:#f92672">%</span>s :<span style="color:#f92672">%</span>s
+PRIVMSG <span style="color:#f92672">%</span>s :Hi <span style="color:#f92672">%</span>s, I<span style="color:#e6db74">&#39;m a bot that&#39;</span>s part of the BSides London Challenge<span style="color:#f92672">.</span>
+IDENT
+PRIVMSG <span style="color:#f92672">%</span>s :<span style="color:#f92672">%</span>s <span style="color:#f92672">/</span> <span style="color:#f92672">%</span>s
+SHUTDOWN
+PRIVMSG <span style="color:#f92672">%</span>s :bingo <span style="color:#f92672">-</span> botnet shutting down
+QUIT :Botnet shutdown
+Botnet shutdown
+Botnet has been shutdown <span style="color:#f92672">-</span> restart bot<span style="color:#960050;background-color:#1e0010">?</span>
+PRIVMSG <span style="color:#f92672">%</span>s :so close yet so far<span style="color:#f92672">...</span> wrong pw<span style="color:#960050;background-color:#1e0010">!</span>
+PRIVMSG <span style="color:#f92672">%</span>s :wrong pw
+<span style="color:#75715e">#malfor</span>
+irc<span style="color:#f92672">.</span>efnet<span style="color:#f92672">.</span>fr
+irc<span style="color:#f92672">.</span>swepipe<span style="color:#f92672">.</span>se
+irc<span style="color:#f92672">.</span>efnet<span style="color:#f92672">.</span>net
+HCNFJT<span style="color:#960050;background-color:#1e0010">@</span>
+<span style="color:#f92672">&amp;</span>Help
+h<span style="color:#f92672">&amp;</span>About <span style="color:#f92672">...</span>
+About malfor<span style="color:#f92672">-</span>cw
+malfor<span style="color:#f92672">-</span>cw, Version <span style="color:#ae81ff">1.0</span>
+</code></pre></div><p>These strings can provide a clue as to what the executable does at runtime</p>
+<h3 id="34-anti-debugger---isdebuggerpresent">3.4 Anti Debugger - IsDebuggerPresent</h3>
+<p>When attempting to run the executable in a debugger the application quits with an error message of ‘No Malware here, honest gov!’ as seen in the following screen shot.</p>
+<p><img src="/images/malware3.png" alt="My helpful screenshot"></p>
+<p>The Windows API has several functions that can be used by malicious software to determine if a debugger is being used for analysis. The IsDebuggerPresent API function searches the Process Environment Block (PEB) for the field “IsDebugged”, which will return zero if the executable is not running in the context of a debugger or a nonzero value if a debugger is attached.</p>
+<p>Decompiling the executable it is possible to locate the following function that calls IsDebuggerPresent which then jumps to a function that sets up a dialog box and then exits if a non zero value is returned</p>
+<p><img src="/images/malware4.png" alt="My helpful screenshot"></p>
+<p>Typically the easiest way to overcome a call to an anti-debugger API function is to manually modify the executable during execution to not call the function, or modify the flag post call to ensure that a negative response is returned.  Below you can see the call to the function and the return with a nonzero value.</p>
+<p><img src="/images/malware12.png" alt="My helpful screenshot"></p>
+<p><img src="/images/malware13.png" alt="My helpful screenshot"></p>
+<p>We could dynamically patch the return so that it returns zero, or we could patch the binary however Immunity Debugger provides a simple method of doing this with the <em>!Hidebug IsDebuggerPresent</em> pyCommand which patches kernel32.dll to return a false flag. This allowed investigations into the executable to continue.</p>
+<h3 id="4-core-runtime">4. Core Runtime</h3>
+<p>Having completed static analysis and bypassed the anti-analysis that is built into bot.exe the executable was then run while attached to a debugger and a network packet sniffer was started. This allowed for both the capture of all network traffic as well as review of the application and memory stack during operation.</p>
+<p>The following section details the execution flow of the application and looks at the reverse engineering some of the more important sections</p>
+<p>The analysis was done live. Although the executable was run in a virtual machine, DNS, Web, or IRC were not re-directed and ran against the original intended locations. An alternative approach could have been to use a tool such as <a href="http://www.mandiant.com/resources/download/research-tool-mandiant-apatedns">apateDNS</a> to redirect queries to a server under our control. The simplest method would have been to re-direct traffic to a Kali linux instance running a simple python script and an IRC server - maybe <a href="http://ngircd.barton.de/documentation.php.en">NgIrcD</a> or you could just:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">sudo apt<span style="color:#f92672">-</span>get install ircd<span style="color:#f92672">-</span>irc2
+</code></pre></div><p>and you should be good to go.</p>
+<h3 id="5-windows-registary">5. Windows Registary</h3>
+<p>Before and after running the bot a registry snapshot was taken with <a href="http://sourceforge.net/projects/regshot/">Regshot</a>. No significant changes were made to the registry by the executable</p>
+<h3 id="6-http-get-request">6. HTTP GET Request</h3>
+<p>On execution bot.exe first issues a HTTP GET request for the following URL</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">http:<span style="color:#f92672">//</span>ghowen<span style="color:#f92672">.</span>me<span style="color:#f92672">/</span>malfor<span style="color:#f92672">/</span>cnc<span style="color:#f92672">.</span>php<span style="color:#960050;background-color:#1e0010">?</span>id<span style="color:#f92672">=</span>xx<span style="color:#f92672">%</span>uid<span style="color:#f92672">=</span>yy
+</code></pre></div><p>Where xx is the computer name and yy is the name of the account the application is running under. The servers responds with an IRC chat room The screen shot below shows this request captured via WireShark:</p>
+<p><img src="/images/malware5.png" alt="My helpful screenshot"></p>
+<p><strong>Note:</strong> Now the challenge is over the link is no longer valid and the server will return a 404 when queried. In order to replicate this off-line. ApateDNS can be used to re-direct the DNS for ghowen.me to a server under your control. For a simple python interface to return a similar response try something like this</p>
+<pre><code>    from twisted.web import server, resource
+    from twisted.internet import reactor
+    class HelloResource(resource.Resource):
+        isLeaf = True
+        numberRequests = 0
+            def render_GET(self, request):
+            self.numberRequests += 1
+            request.setHeader(&quot;content-type&quot;, &quot;text/plain&quot;)
+            return &quot;#malfor-china&quot; + &quot;\n&quot;
+    reactor.listenTCP(80, server.Site(HelloResource()))
+    reactor.run()
+</code></pre>
+<h4 id="code-stolen-from-twistedwebhttpstwistedmatrixcom">Code stolen from <a href="https://twistedmatrix.com">TwistedWeb</a></h4>
+<p>Alternatively you could let the executable run as is - you&rsquo;ll see a bunch of html error on the stack, but the executable will fall back to attempting to connect to #malfor when all else fails - or you can simply &lsquo;/msg&rsquo; the executable direct without joining an IRC chatroom.</p>
+<p>When analyzing the software, repeated requests were made to the ghowen.me server over the course of two weeks to try and identify the full list and pattern of group names returned. The following tables lists the dates and the response received when making a request to the website.</p>
+<!-- raw HTML omitted -->
+<p>Based on this two week review it is reasonable to conclude that the website returns a specific chat-room based on the day of the week.</p>
+<p>Browsing the website at ghowen.me the domain appears to be owned by Gareth Owen a university lecturer at Portsmouth University in the UK and hosted at a virtual server at <a href="http://www.tagadab.com">Tagabab</a>. This was confirmed by the whois information. While the domain was registered under the company name of ‘XYZ Circuits Ltd’ and and an individual of ‘Larry Bevois&rsquo;, the email address used ties back to Gareth Owen’s gmail email account, used elsewhere. In addition the address used in the registration is also part of the University of Portsmouth campus. The website appears to be 3  - 4 month old according to on-line web archives such at Netcraft.</p>
+<h3 id="7-irc-communication">7. IRC Communication</h3>
+<p>Having gathered the irc chat room information from the ghowen.me website the executable attempts to join the IRC server irc.efnet.fr. Each time the executable was run during analyses this connection was dropped from the server with the error message ‘You are not authorized to use this server’. This is probably because the analysis is being performed in the UK.</p>
+<p><img src="/images/malware6.png" alt="My helpful screenshot"></p>
+<p>Having failed to connect to irc.efnet.fr the executable then attempts to connect to irc.swepipe.net.</p>
+<p>When this connection is successful the executable then sets a username, and joins the password protected chat room that was returned in the website GET request previously. The executable contains the password for the chat room, which is ‘bubblegum’ and the password is the same for each chatroom tested over the 2 week period. The executable then sets a room topic of ‘Resistance is futile’ and waits for further commands.</p>
+<p>Reviewing the output from the strings run earlier we are able to determine that bot.exe seems to accept the following commands issued in a private message:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">HELLO
+IDENT
+SHUTDOWN
+</code></pre></div><p>Testing these commands with the executable in the live chatroom the following was determined:</p>
+<p><strong>Hello</strong> -  Echo’s the following to the main chat room “Hello %s I’m a bot thats part of the BSides London Challenge”  where %s is the user who send the private message</p>
+<p><strong>IDENT</strong> - Echo’s back the computer name and the user account that the bot is running on to the main chat room</p>
+<p><strong>SHUTDOWN</strong> - when supplied with the correct password, the following is echo’ed to the user in a private message “bingo - botnet shutting down…” and then the executable quits IRC with the message of “Botnet shutdown” and display a pop up window on the machine its running on asking if the Bot should exit or restart. When an incorrect password is supplied to the SHUTDOWN message the executable echo’s the following to the main chat room “wrong pw” - one discrepancy was discovered with this - when using the password “iamborg” the private message “so close yet so far…wrong pw!” was returned.Interestingly the string &ldquo;iamborg&rdquo; was not found while running strings on the executable, but can be seen on the stack during runtime. This suggests that it is build dynamically at runtime. Often malware authors do this deliberately to make it harder for analysis to occur.</p>
+<p><img src="/images/malware14.png" alt="My helpful screenshot"></p>
+<p>Loading the executable into IDA Pro and searching for the ASCII string ‘bingo - botnet shutting down’ leads to a section IDA Pro labeled as loc_410143C. Reviewing functions that call this sequence of commands at loc_410143C the application flow can start to be determined. Prior to the section that shutdown the bot is the following:</p>
+<p><img src="/images/malware7.png" alt="My helpful screenshot"></p>
+<p>We can&rsquo;t see the string &lsquo;iamborg yet&rsquo; but the ASCII string <strong>HCNFJT@</strong> seems related. If we search IDAPro for occurrences of this string we&rsquo;re lead to the following function:</p>
+<p><img src="/images/malware16.png" alt="My helpful screenshot"></p>
+<p>Here the application is taking the ASCII string <strong>HCNFJT@</strong> and byte by byte XOR&rsquo;ing it with the hex code 0x21&hellip;. One each loop around 1 is added to ebx, which in turn increments the XOR&rsquo;ed string, so 0x21 becomes 0x22, then 0x23 etc until the XOR is complete which results in the string <strong>&ldquo;iamborg&rdquo;</strong>. As the testing above showed this string isn&rsquo;t the password needed to shutdown the botnet so further analysis was needed</p>
+<p>Looking at the function prior to the shutdown function, we can see that the <strong>HCNFJT@</strong> is pushed on to the stack and then we jump to a function labeled as sub_4014BE. This function takes a bunch or arguments and variables:</p>
+<p><img src="/images/malware17.png" alt="My helpful screenshot"></p>
+<p>Using Immunity Debugger we are able to discover what these are:</p>
+<p><img src="/images/malware18.png" alt="My helpful screenshot"></p>
+<p>Here we can see that arg_0 maps to the IRC username of the person sending the private message, arg_04 maps to the string &lsquo;iamborg&rsquo;</p>
+<p>If we follow this function further we get to the following code:</p>
+<p><img src="/images/malware19.png" alt="My helpful screenshot"></p>
+<p>Also of note here that is 1Ah is pushed and then popped off the stack, and that 41h is being added to dl.</p>
+<p>Here&rsquo;s whats happening&hellip; The two strings (arg_0 and arg_04) are added together - then the modulo of that number and 26 is taken and then 65 is added. The function then loops using ebx and edi as counters. EDI contains the username length, and on each loop EBX is incremented until it reaches the same number as EDI and then the function returns.</p>
+<p>The condensed code is:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">push  <span style="color:#ae81ff">1</span>Ah 		; push <span style="color:#ae81ff">26</span> on to stack
+<span style="color:#f92672">...</span>
+<span style="color:#f92672">...</span>
+pop ecx 		; pop <span style="color:#ae81ff">26</span> of the stack into ecx
+add eax, esi 	; bitwise add a single character of each string together
+<span style="color:#f92672">...</span>
+IDIV ecx 		; take modulo
+add dl, <span style="color:#ae81ff">41</span> 		; add <span style="color:#ae81ff">65</span>
+<span style="color:#f92672">...</span>
+</code></pre></div><p>As the function loops around you can see in a debugger the password developing, however sometimes it is easier doing the maths outside of a debugger in order to understand what&rsquo;s happening. The following is a python representation of a single loop around the above block:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">print</span> (chr((ord(<span style="color:#e6db74">&#34;j&#34;</span>) <span style="color:#f92672">+</span> ord(<span style="color:#e6db74">&#34;i&#34;</span>)) <span style="color:#f92672">%</span> <span style="color:#ae81ff">0x1a</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x41</span>))
+</code></pre></div><p>Once this loop has finished looking at the Registers (top right section of the above screen shot) ECX contains the password that needs to be supplied with the SHUTDOWN command in order to ensure the jump to the shutdown function occurs - in this case it is <strong>DPFANJB</strong>. Suppling this with the SHUTDOWN command results in the executable shutting down with the behavior described previously:</p>
+<p><img src="/images/malware9.png" alt="My helpful screenshot"></p>
+<p>Once supplied the executable pop&rsquo;s up a window on the client machine and terminates the IRC session</p>
+<p><img src="/images/malware10.png" alt="My helpful screenshot"></p>
+<h3 id="8-conclusion">8. Conclusion</h3>
+<p>Relax - we saved the world!</p>
+<h3 id="9-tools-used">9. Tools used</h3>
+<p><strong>Static Analysis:</strong> PEiD, PEView, PEProfessional, Strings, IDAPro</p>
+<p><strong>Dynamic Analysis:</strong> ApateDNS, Immunity Debugger, Wireshark, RegShot, Dependency Walker, Resource Hacker, Process Explorer</p>
+</div>
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+    
+  </body>
+</html>
+

@@ -1,0 +1,384 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rich Fairhurst </title>
+    <link>http://richfairhurst.co.uk/</link>
+    <language>en-us</language>
+    <author></author>
+    <rights>(C) 2014</rights>
+    <updated>2013-12-31 00:00:00 &#43;0000 UTC</updated>
+
+    
+      <item>
+        <title>BSides London 2014: Challenge 1</title>
+        <link>http://richfairhurst.co.uk/post/2014/12/bsides-london-2014-challenge-1/</link>
+        <pubDate>Sun, 14 Dec 2014 00:00:00 UTC</pubDate>
+        <author></author>
+        <guid>http://richfairhurst.co.uk/post/2014/12/bsides-london-2014-challenge-1/</guid>
+        <description>&lt;p&gt;This year I entered my first BSidesLondon challenge. Each year BSidesLondon post challenges in order to win a ticket to the event. The first challenge was to analyze an executable and shutdown the botnet - and in doing so, get the girl and save the world! (OK I made that last bit up, but it&amp;rsquo;s nice to have a story around it)&lt;/p&gt;
+&lt;p&gt;This post was originally my submission but I didn&amp;rsquo;t win&amp;hellip;probably because there are far better people than me submitting reports and in a small way it probably didn&amp;rsquo;t help that I was lazy and didn&amp;rsquo;t bother to decode the password function and just took the password off the stack and shut the botnet down. The good news was that I had a BSides ticket anyway - Yah!.&lt;/p&gt;
+&lt;p&gt;Reports -&amp;gt; blog posts don&amp;rsquo;t really sit well together which is why this post has sort of has warped into something stuck in between a report and a post, and pasting data from a PDF into markdown sucks a little so the formatting below isn&amp;rsquo;t great - be warned! In addition since the challenge has now ended the website and IRC channels are unavailable, although I have included suggestions on how to replicate yourself locally were appropriate.&lt;/p&gt;
+&lt;p&gt;You can find a copy of the challenge brief &lt;a href=&#34;http://richfairhurst.co.uk/files/Mission1.pdf&#34;&gt;here&lt;/a&gt; and the malware file &lt;a href=&#34;http://richfairhurst.co.uk/files/bot.zip&#34;&gt;here&lt;/a&gt; (the zipfile password is &amp;lsquo;malware&amp;rsquo; )&lt;/p&gt;
+&lt;h3 id=&#34;1-executable-details&#34;&gt;1. Executable Details&lt;/h3&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;h3 id=&#34;2-summary-of-functionality&#34;&gt;2. Summary of Functionality&lt;/h3&gt;
+&lt;p&gt;On startup the executable issues a HTTP GET request to a website to obtain a specific IRC chatroom, and then attempts to connect to one of two IRC servers and join the specific chat room and waits for commands. The executable seems to support the following commands issued in a private message to it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;HELLO
+IDENT
+SHUTDOWN
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;No additional files were downloaded, nor does the executable attempt to install or hide itself within the host operating system and can be easily killed via the task manager.&lt;/p&gt;
+&lt;h3 id=&#34;3-anti-analysis-and-packer-stages&#34;&gt;3. Anti-Analysis and Packer Stages&lt;/h3&gt;
+&lt;p&gt;Malware authors employ various strategies in an attempt to thwart analysis. The executable was reviewed for the presence of any anti-analysis techniques and the following sections detail what was discovered.&lt;/p&gt;
+&lt;h3 id=&#34;31-pe-header-review&#34;&gt;3.1 PE Header review&lt;/h3&gt;
+&lt;p&gt;A common approach often used to prevent ‘static’ analysis is to ‘pack’ the executable. This is where the executable is compressed so that all that is actually viewable is the compressed format which hides the true code of the executable. When the executable is run, a small wrapper program embedded at the start of the executable runs to decompress the rest of the packed file.&lt;/p&gt;
+&lt;p&gt;The PE file format stores interesting information within the headers of the executable that can help identify if the executable has been ‘packed’. PEiD, PE Explorer and PEView are applications that allow review of these headers. Of most interest is the IMAGE_FILE_HEADER and the SECTION headers. Using these tools it is possible to review and determine the names and size of the file headers.&lt;/p&gt;
+&lt;p&gt;The IMAGE_FILE_HEADER provides a clue to the date and time the executive was created as it contains a ‘time date stamp’ item. This date and time is only suggestive as compilers can set this time to be anything they wish (however it can be useful when reviewing multiple files to determine if there is a correlation - a very close compile time might suggest that the files were created at the same time)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;Bot&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;exe has a date time stamp of: &lt;span style=&#34;color:#ae81ff&#34;&gt;2014&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;02&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt; Thu &lt;span style=&#34;color:#ae81ff&#34;&gt;14&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;54&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;24&lt;/span&gt; UTC
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The following table shows the PE sections size as shown by PEView. Note that the size of raw data and the virtual size are not aligned which strongly suggests that some ‘packing’ has taken place, and that at runtime the UPX sections will be ‘unpacked’. The section naming also provided evidence that a packer has been used. Normal PE Header sections are .text .data .rdata, and .rsrc&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;h3 id=&#34;32-upx-packed&#34;&gt;3.2 UPX Packed&lt;/h3&gt;
+&lt;p&gt;UPX is available from &lt;a href=&#34;http://upx.sourceforge.net&#34;&gt;http://upx.sourceforge.net&lt;/a&gt; and according to the website clams to be the “Ultimate Packer for eXecutables”. The UPX program offers the ability to pack as well as unpack any previously packed executables so unpacking is simply a case of running the executable through UPX with the -d flag to decompress using the following command:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware1.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Having run this command the original PE header section are visible and the file can be decompiled and investigated further:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware2.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Having &amp;lsquo;unpacked&amp;rsquo; the executable we are now able to examine the uncompressed code.&lt;/p&gt;
+&lt;p&gt;The Linux strings command returns each string of printable characters in a given file. It is used to determine the contents of and to extract text from binary files. (Additional information on the strings commands can be found at &lt;a href=&#34;http://www.linfo.org/strings.html&#34;&gt;http://www.linfo.org/strings.html&lt;/a&gt;. Running strings against the executable returned:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;http:&lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt;ghowen&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;me&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;malfor&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;cnc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;php&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;?&lt;/span&gt;id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;uid&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;6667&lt;/span&gt;
+malfor
+uop
+&lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s&lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;d
+misery mystery
+USER &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; :&lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s
+NICK &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s
+Anti&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;debug
+No malware here, honest guv&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;
+PING
+&lt;span style=&#34;color:#ae81ff&#34;&gt;001&lt;/span&gt;
+Resistance &lt;span style=&#34;color:#f92672&#34;&gt;is&lt;/span&gt; futile
+bubblegum
+MODE &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;i
+JOIN &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s
+MODE &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;k &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s
+TOPIC &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s :&lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s
+PRIVMSG &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s :Hi &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s, I&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;m a bot that&amp;#39;&lt;/span&gt;s part of the BSides London Challenge&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+IDENT
+PRIVMSG &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s :&lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s
+SHUTDOWN
+PRIVMSG &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s :bingo &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; botnet shutting down
+QUIT :Botnet shutdown
+Botnet shutdown
+Botnet has been shutdown &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; restart bot&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;?&lt;/span&gt;
+PRIVMSG &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s :so close yet so far&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; wrong pw&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;
+PRIVMSG &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s :wrong pw
+&lt;span style=&#34;color:#75715e&#34;&gt;#malfor&lt;/span&gt;
+irc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;efnet&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;fr
+irc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;swepipe&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;se
+irc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;efnet&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;net
+HCNFJT&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;@&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;Help
+h&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;About &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+About malfor&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;cw
+malfor&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;cw, Version &lt;span style=&#34;color:#ae81ff&#34;&gt;1.0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;These strings can provide a clue as to what the executable does at runtime&lt;/p&gt;
+&lt;h3 id=&#34;34-anti-debugger---isdebuggerpresent&#34;&gt;3.4 Anti Debugger - IsDebuggerPresent&lt;/h3&gt;
+&lt;p&gt;When attempting to run the executable in a debugger the application quits with an error message of ‘No Malware here, honest gov!’ as seen in the following screen shot.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware3.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The Windows API has several functions that can be used by malicious software to determine if a debugger is being used for analysis. The IsDebuggerPresent API function searches the Process Environment Block (PEB) for the field “IsDebugged”, which will return zero if the executable is not running in the context of a debugger or a nonzero value if a debugger is attached.&lt;/p&gt;
+&lt;p&gt;Decompiling the executable it is possible to locate the following function that calls IsDebuggerPresent which then jumps to a function that sets up a dialog box and then exits if a non zero value is returned&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware4.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Typically the easiest way to overcome a call to an anti-debugger API function is to manually modify the executable during execution to not call the function, or modify the flag post call to ensure that a negative response is returned.  Below you can see the call to the function and the return with a nonzero value.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware12.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware13.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We could dynamically patch the return so that it returns zero, or we could patch the binary however Immunity Debugger provides a simple method of doing this with the &lt;em&gt;!Hidebug IsDebuggerPresent&lt;/em&gt; pyCommand which patches kernel32.dll to return a false flag. This allowed investigations into the executable to continue.&lt;/p&gt;
+&lt;h3 id=&#34;4-core-runtime&#34;&gt;4. Core Runtime&lt;/h3&gt;
+&lt;p&gt;Having completed static analysis and bypassed the anti-analysis that is built into bot.exe the executable was then run while attached to a debugger and a network packet sniffer was started. This allowed for both the capture of all network traffic as well as review of the application and memory stack during operation.&lt;/p&gt;
+&lt;p&gt;The following section details the execution flow of the application and looks at the reverse engineering some of the more important sections&lt;/p&gt;
+&lt;p&gt;The analysis was done live. Although the executable was run in a virtual machine, DNS, Web, or IRC were not re-directed and ran against the original intended locations. An alternative approach could have been to use a tool such as &lt;a href=&#34;http://www.mandiant.com/resources/download/research-tool-mandiant-apatedns&#34;&gt;apateDNS&lt;/a&gt; to redirect queries to a server under our control. The simplest method would have been to re-direct traffic to a Kali linux instance running a simple python script and an IRC server - maybe &lt;a href=&#34;http://ngircd.barton.de/documentation.php.en&#34;&gt;NgIrcD&lt;/a&gt; or you could just:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;sudo apt&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;get install ircd&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;irc2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;and you should be good to go.&lt;/p&gt;
+&lt;h3 id=&#34;5-windows-registary&#34;&gt;5. Windows Registary&lt;/h3&gt;
+&lt;p&gt;Before and after running the bot a registry snapshot was taken with &lt;a href=&#34;http://sourceforge.net/projects/regshot/&#34;&gt;Regshot&lt;/a&gt;. No significant changes were made to the registry by the executable&lt;/p&gt;
+&lt;h3 id=&#34;6-http-get-request&#34;&gt;6. HTTP GET Request&lt;/h3&gt;
+&lt;p&gt;On execution bot.exe first issues a HTTP GET request for the following URL&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;http:&lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt;ghowen&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;me&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;malfor&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;cnc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;php&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;?&lt;/span&gt;id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;xx&lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;uid&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;yy
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Where xx is the computer name and yy is the name of the account the application is running under. The servers responds with an IRC chat room The screen shot below shows this request captured via WireShark:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware5.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Now the challenge is over the link is no longer valid and the server will return a 404 when queried. In order to replicate this off-line. ApateDNS can be used to re-direct the DNS for ghowen.me to a server under your control. For a simple python interface to return a similar response try something like this&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;    from twisted.web import server, resource
+    from twisted.internet import reactor
+    class HelloResource(resource.Resource):
+        isLeaf = True
+        numberRequests = 0
+            def render_GET(self, request):
+            self.numberRequests += 1
+            request.setHeader(&amp;quot;content-type&amp;quot;, &amp;quot;text/plain&amp;quot;)
+            return &amp;quot;#malfor-china&amp;quot; + &amp;quot;\n&amp;quot;
+    reactor.listenTCP(80, server.Site(HelloResource()))
+    reactor.run()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;code-stolen-from-twistedwebhttpstwistedmatrixcom&#34;&gt;Code stolen from &lt;a href=&#34;https://twistedmatrix.com&#34;&gt;TwistedWeb&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;Alternatively you could let the executable run as is - you&amp;rsquo;ll see a bunch of html error on the stack, but the executable will fall back to attempting to connect to #malfor when all else fails - or you can simply &amp;lsquo;/msg&amp;rsquo; the executable direct without joining an IRC chatroom.&lt;/p&gt;
+&lt;p&gt;When analyzing the software, repeated requests were made to the ghowen.me server over the course of two weeks to try and identify the full list and pattern of group names returned. The following tables lists the dates and the response received when making a request to the website.&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;Based on this two week review it is reasonable to conclude that the website returns a specific chat-room based on the day of the week.&lt;/p&gt;
+&lt;p&gt;Browsing the website at ghowen.me the domain appears to be owned by Gareth Owen a university lecturer at Portsmouth University in the UK and hosted at a virtual server at &lt;a href=&#34;http://www.tagadab.com&#34;&gt;Tagabab&lt;/a&gt;. This was confirmed by the whois information. While the domain was registered under the company name of ‘XYZ Circuits Ltd’ and and an individual of ‘Larry Bevois&amp;rsquo;, the email address used ties back to Gareth Owen’s gmail email account, used elsewhere. In addition the address used in the registration is also part of the University of Portsmouth campus. The website appears to be 3  - 4 month old according to on-line web archives such at Netcraft.&lt;/p&gt;
+&lt;h3 id=&#34;7-irc-communication&#34;&gt;7. IRC Communication&lt;/h3&gt;
+&lt;p&gt;Having gathered the irc chat room information from the ghowen.me website the executable attempts to join the IRC server irc.efnet.fr. Each time the executable was run during analyses this connection was dropped from the server with the error message ‘You are not authorized to use this server’. This is probably because the analysis is being performed in the UK.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware6.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Having failed to connect to irc.efnet.fr the executable then attempts to connect to irc.swepipe.net.&lt;/p&gt;
+&lt;p&gt;When this connection is successful the executable then sets a username, and joins the password protected chat room that was returned in the website GET request previously. The executable contains the password for the chat room, which is ‘bubblegum’ and the password is the same for each chatroom tested over the 2 week period. The executable then sets a room topic of ‘Resistance is futile’ and waits for further commands.&lt;/p&gt;
+&lt;p&gt;Reviewing the output from the strings run earlier we are able to determine that bot.exe seems to accept the following commands issued in a private message:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;HELLO
+IDENT
+SHUTDOWN
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Testing these commands with the executable in the live chatroom the following was determined:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Hello&lt;/strong&gt; -  Echo’s the following to the main chat room “Hello %s I’m a bot thats part of the BSides London Challenge”  where %s is the user who send the private message&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;IDENT&lt;/strong&gt; - Echo’s back the computer name and the user account that the bot is running on to the main chat room&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;SHUTDOWN&lt;/strong&gt; - when supplied with the correct password, the following is echo’ed to the user in a private message “bingo - botnet shutting down…” and then the executable quits IRC with the message of “Botnet shutdown” and display a pop up window on the machine its running on asking if the Bot should exit or restart. When an incorrect password is supplied to the SHUTDOWN message the executable echo’s the following to the main chat room “wrong pw” - one discrepancy was discovered with this - when using the password “iamborg” the private message “so close yet so far…wrong pw!” was returned.Interestingly the string &amp;ldquo;iamborg&amp;rdquo; was not found while running strings on the executable, but can be seen on the stack during runtime. This suggests that it is build dynamically at runtime. Often malware authors do this deliberately to make it harder for analysis to occur.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware14.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Loading the executable into IDA Pro and searching for the ASCII string ‘bingo - botnet shutting down’ leads to a section IDA Pro labeled as loc_410143C. Reviewing functions that call this sequence of commands at loc_410143C the application flow can start to be determined. Prior to the section that shutdown the bot is the following:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware7.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can&amp;rsquo;t see the string &amp;lsquo;iamborg yet&amp;rsquo; but the ASCII string &lt;strong&gt;HCNFJT@&lt;/strong&gt; seems related. If we search IDAPro for occurrences of this string we&amp;rsquo;re lead to the following function:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware16.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Here the application is taking the ASCII string &lt;strong&gt;HCNFJT@&lt;/strong&gt; and byte by byte XOR&amp;rsquo;ing it with the hex code 0x21&amp;hellip;. One each loop around 1 is added to ebx, which in turn increments the XOR&amp;rsquo;ed string, so 0x21 becomes 0x22, then 0x23 etc until the XOR is complete which results in the string &lt;strong&gt;&amp;ldquo;iamborg&amp;rdquo;&lt;/strong&gt;. As the testing above showed this string isn&amp;rsquo;t the password needed to shutdown the botnet so further analysis was needed&lt;/p&gt;
+&lt;p&gt;Looking at the function prior to the shutdown function, we can see that the &lt;strong&gt;HCNFJT@&lt;/strong&gt; is pushed on to the stack and then we jump to a function labeled as sub_4014BE. This function takes a bunch or arguments and variables:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware17.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Using Immunity Debugger we are able to discover what these are:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware18.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Here we can see that arg_0 maps to the IRC username of the person sending the private message, arg_04 maps to the string &amp;lsquo;iamborg&amp;rsquo;&lt;/p&gt;
+&lt;p&gt;If we follow this function further we get to the following code:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware19.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Also of note here that is 1Ah is pushed and then popped off the stack, and that 41h is being added to dl.&lt;/p&gt;
+&lt;p&gt;Here&amp;rsquo;s whats happening&amp;hellip; The two strings (arg_0 and arg_04) are added together - then the modulo of that number and 26 is taken and then 65 is added. The function then loops using ebx and edi as counters. EDI contains the username length, and on each loop EBX is incremented until it reaches the same number as EDI and then the function returns.&lt;/p&gt;
+&lt;p&gt;The condensed code is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;push  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;Ah 		; push &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; on to stack
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+pop ecx 		; pop &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; of the stack into ecx
+add eax, esi 	; bitwise add a single character of each string together
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+IDIV ecx 		; take modulo
+add dl, &lt;span style=&#34;color:#ae81ff&#34;&gt;41&lt;/span&gt; 		; add &lt;span style=&#34;color:#ae81ff&#34;&gt;65&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As the function loops around you can see in a debugger the password developing, however sometimes it is easier doing the maths outside of a debugger in order to understand what&amp;rsquo;s happening. The following is a python representation of a single loop around the above block:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; (chr((ord(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;j&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; ord(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;i&amp;#34;&lt;/span&gt;)) &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0x1a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0x41&lt;/span&gt;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Once this loop has finished looking at the Registers (top right section of the above screen shot) ECX contains the password that needs to be supplied with the SHUTDOWN command in order to ensure the jump to the shutdown function occurs - in this case it is &lt;strong&gt;DPFANJB&lt;/strong&gt;. Suppling this with the SHUTDOWN command results in the executable shutting down with the behavior described previously:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware9.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Once supplied the executable pop&amp;rsquo;s up a window on the client machine and terminates the IRC session&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware10.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;8-conclusion&#34;&gt;8. Conclusion&lt;/h3&gt;
+&lt;p&gt;Relax - we saved the world!&lt;/p&gt;
+&lt;h3 id=&#34;9-tools-used&#34;&gt;9. Tools used&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Static Analysis:&lt;/strong&gt; PEiD, PEView, PEProfessional, Strings, IDAPro&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Dynamic Analysis:&lt;/strong&gt; ApateDNS, Immunity Debugger, Wireshark, RegShot, Dependency Walker, Resource Hacker, Process Explorer&lt;/p&gt;
+</description>
+      </item>
+    
+      <item>
+        <title>Coursera Reverse Challenge</title>
+        <link>http://richfairhurst.co.uk/post/2014/07/coursera-reverse-challenge/</link>
+        <pubDate>Wed, 23 Jul 2014 00:00:00 UTC</pubDate>
+        <author></author>
+        <guid>http://richfairhurst.co.uk/post/2014/07/coursera-reverse-challenge/</guid>
+        <description>&lt;p&gt;Last month the Coursera course &amp;lsquo;Malicious Software and its Underground Economy: Two Sides to Every Story&amp;rsquo; finished.&lt;/p&gt;
+&lt;p&gt;The course was run over 6 weeks and included a bunch of video lectures each week followed by additional reading and a quiz. You can find an overview of the course &lt;a href=&#34;https://www.coursera.org/course/malsoftware&#34;&gt;here&lt;/a&gt;. It looks like this was the second time the course has been run -  which is probably about right, I&amp;rsquo;m normally late to the party.&lt;/p&gt;
+&lt;p&gt;There wasn&amp;rsquo;t as much hands on reversing engineering as I had hoped for - there was a video walk through of reversing a binary and then a &amp;lsquo;challenge&amp;rsquo; as part of the final quiz. Since the course has now finished it&amp;rsquo;s probably safe to post my write up of the final reversing challenge.&lt;/p&gt;
+&lt;p&gt;In a nutshell a download link was provided to a file and the challenge was to determine the correct password. You can find a locally cached copy of the challenge file &lt;a href=&#34;http://richfairhurst.co.uk/downloads/reverse-challenge&#34;&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Lets start by running the command &lt;strong&gt;file&lt;/strong&gt; on the executable to confirm what type of file it is ( and if they were being kind and had left any debugging symbols :-)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;rich&lt;span style=&#34;color:#a6e22e&#34;&gt;@ubuntu&lt;/span&gt;:&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt; file reverse&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;challenge
+reverse&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;challenge: ELF &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;bit LSB  executable, Intel &lt;span style=&#34;color:#ae81ff&#34;&gt;80386&lt;/span&gt;, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; (SYSV), dynamically linked (uses shared libs), &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;Linux &lt;span style=&#34;color:#ae81ff&#34;&gt;2.6&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;, BuildID[sha1]&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;43&lt;/span&gt;cb53541a366b39ab4b73f31a4fac8961ad959c, stripped
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And then run strings to look for anything interesting&amp;hellip;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;rich&lt;span style=&#34;color:#a6e22e&#34;&gt;@ubuntu&lt;/span&gt;:&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt; strings reverse&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;challenge
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;tmp
+&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;b2&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+XXXXf
+&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;tmp
+&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;b1&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+XXXXf
+[&lt;span style=&#34;color:#f92672&#34;&gt;^&lt;/span&gt;_]
+&lt;span style=&#34;color:#a6e22e&#34;&gt;@EHJ&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@DZEL&lt;/span&gt;
+woot&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;134.219&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;148.8&lt;/span&gt;
+Dude, no debugging ;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;)
+Are you feeling lucky today&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;?&lt;/span&gt;
+[&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;] WooT&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt; THE KEY IS: &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s
+[&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;] If you want, now open a terminal &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; type:
+echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; nc &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt;d
+[&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;] Maybe&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;] Nope&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The string &lt;strong&gt;@EHJ~@DZEL&lt;/strong&gt; looks very much like an XOR&amp;rsquo;ed string ( we&amp;rsquo;ll come back to this shortly ) lets now run the executable via IDA Pro&amp;rsquo;s build in debugger and see what happens&amp;hellip;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge1.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Whoa thats not cool bro! It seems that the executable bombs out if it detects the use of a debugger! Obviously some anti debugging protection going on here&amp;hellip;lets strace this file to see whats going on ( or we could just read the source in IDA Pro, but strace is cool right? )&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;rich&lt;span style=&#34;color:#a6e22e&#34;&gt;@ubuntu&lt;/span&gt;:&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt; strace &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;reverse&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;challenge
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+ptrace(PTRACE_TRACEME, &lt;span style=&#34;color:#ae81ff&#34;&gt;3639303790&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0xbff9fd34&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; EPERM (Operation &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; permitted)
+fstat64(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, {st_mode&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;S_IFCHR&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0620&lt;/span&gt;, st_rdev&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;makedev(&lt;span style=&#34;color:#ae81ff&#34;&gt;136&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;), &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+mmap2(NULL, &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt;, PROT_READ&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;PROT_WRITE, MAP_PRIVATE&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;MAP_ANONYMOUS, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0xb772f000&lt;/span&gt;
+write(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Dude, no debugging ;-)&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt;Dude, no debugging ;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;)
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This a common anti-analysis technique that works on the basis that the executable checks to see if it can debug itself. If the executable is already running in a debugger then the call to ptrace() fails since there can be only be one debugger active at a time - the executable then returns an error, displays the &amp;ldquo;Dude no debugging&amp;rdquo; message and quits. Lets look at the code in IDA Pro and figure out a way to bypass or remove this anti debugging&amp;hellip;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge2.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;There are numerous ways to defeat this&amp;hellip;we could zero ( nop ) out the:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;mov al, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;Ah
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;or write our own ptrace() function that always returns 0 and load it via LD_PRELOAD or since the jump at the end is conditional (jump if not zero) we could edit the code to change this to an unconditional jump. I chose the last option, but all are just as good and simple to implement. IDA Pro has a patch function so we can easily change the byte code to alter the &lt;strong&gt;jnz&lt;/strong&gt; and change it to &lt;strong&gt;jmp&lt;/strong&gt;. Lets change:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge3.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;to&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge4.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The exit function should never be reached now as the unconditional jump should completely ignore it and we should be able to run the program in a debugger without any issues&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge5.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Now we take take a look at what the executable is doing. A good place to start is the &amp;ldquo;Are you feeling lucky today?&amp;rdquo; string, since it&amp;rsquo;s a fair assumption that the executable will be looking for input at this point which will determine the output of the program.  We see a bunch of &lt;strong&gt;cmp&lt;/strong&gt; and &lt;strong&gt;jz&lt;/strong&gt;&amp;lsquo;s that look interesting&amp;hellip;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge6.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Lets also have a look at the &lt;strong&gt;@EHJ~@DZEL&lt;/strong&gt; string that looks XOR like-ish&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge7.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This last section is the password checking function which, with review, does the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Takes a character of our user entered password at &lt;strong&gt;08048779&lt;/strong&gt; into &lt;strong&gt;eax&lt;/strong&gt; and then at &lt;strong&gt;0804877C&lt;/strong&gt; adds one to it ( in hex )&lt;/li&gt;
+&lt;li&gt;At &lt;strong&gt;0804878C 0xFA&lt;/strong&gt; is assigned to edx ( see &lt;strong&gt;0804876C&lt;/strong&gt; for the initial memory assignment ) and is then bitwise ADD&amp;rsquo;ed with 0x2b&lt;/li&gt;
+&lt;li&gt;The result of which is then xor&amp;rsquo;ed with the vaule in eax (a character from our password). This process loops around until each byte of our password has been xor&amp;rsquo;ed and is them compared with the &lt;strong&gt;@EHJ~@DZEL&lt;/strong&gt; string.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Lets reverse the process to work out what our password needs to be. First we need to bitwise ADD 0x2b and 0xfa to work out what we need to XOR our string with - in python we can do:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0x2b&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0xfa&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;42&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;We can then XOR the string @EHJ~@DZEL with 42:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;join([chr(ord(c) &lt;span style=&#34;color:#f92672&#34;&gt;^&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;42&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;@EHJ~@DZEL&amp;#39;&lt;/span&gt;])
+job&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;`&lt;/span&gt;Tjnpof
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Finally we now need to account for that +1 at &lt;strong&gt;0804877C&lt;/strong&gt; ( so we minus one here, since we are reversing the process )&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;join([chr(ord(c) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ) &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;job`Tjnpof&amp;#39;&lt;/span&gt;])
+ina_Simone
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;At this point we have our password decryption routine, but have not yet worked out how to trigger it. Lets go back to the code after &lt;strong&gt;&amp;ldquo;Are you feeling lucky today&amp;rdquo;&lt;/strong&gt; and those compare and jump statements:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge8.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We know that:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;0x43 in ASCII is C ( the compare at 08048AF4 )&lt;/li&gt;
+&lt;li&gt;0x4E in ASCII is N ( the compare at 08048AF9 )&lt;/li&gt;
+&lt;li&gt;0x41 in ASCII is A ( the compare at 08048AFE )&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This function takes our user entered string, take the first charters and depending on if that character is a C, N, A or another jumps to different areas of code. This pretty much tells us what our password is. Of course if it wasn&amp;rsquo;t obvious we could try all three and step through each code execution branch in a debugger, but at this point it&amp;rsquo;s pretty logical to assume the password is &lt;strong&gt;Nina_Simone&lt;/strong&gt;&amp;hellip;lets try it:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge9.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Rock and roll&amp;hellip;. There a bunch of code left we can reverse, like the routine that writes a file to /tmp but I&amp;rsquo;ll leave that for the interested reader to do themselves&lt;/p&gt;
+</description>
+      </item>
+    
+      <item>
+        <title>Introducing Lanyon</title>
+        <link>http://richfairhurst.co.uk/post/2014/01/introducing-lanyon/</link>
+        <pubDate>Thu, 02 Jan 2014 00:00:00 UTC</pubDate>
+        <author></author>
+        <guid>http://richfairhurst.co.uk/post/2014/01/introducing-lanyon/</guid>
+        <description>&lt;p&gt;Lanyon is an unassuming &lt;a href=&#34;http://jekyllrb.com&#34;&gt;Jekyll&lt;/a&gt; theme that places content first by tucking away navigation in a hidden drawer. It&amp;rsquo;s based on &lt;a href=&#34;http://getpoole.com&#34;&gt;Poole&lt;/a&gt;, the Jekyll butler.&lt;/p&gt;
+&lt;h3 id=&#34;built-on-poole&#34;&gt;Built on Poole&lt;/h3&gt;
+&lt;p&gt;Poole is the Jekyll Butler, serving as an upstanding and effective foundation for Jekyll themes by &lt;a href=&#34;https://twitter.com/mdo&#34;&gt;@mdo&lt;/a&gt;. Poole, and every theme built on it (like Lanyon here) includes the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Complete Jekyll setup included (layouts, config, &lt;a href=&#34;http://richfairhurst.co.uk/404&#34;&gt;404&lt;/a&gt;, &lt;a href=&#34;http://richfairhurst.co.uk/index.xml&#34;&gt;RSS feed&lt;/a&gt;, posts, and &lt;a href=&#34;http://richfairhurst.co.uk/about&#34;&gt;example page&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Mobile friendly design and development&lt;/li&gt;
+&lt;li&gt;Easily scalable text and component sizing with &lt;code&gt;rem&lt;/code&gt; units in the CSS&lt;/li&gt;
+&lt;li&gt;Support for a wide gamut of HTML elements&lt;/li&gt;
+&lt;li&gt;Related posts (time-based, because Jekyll) below each post&lt;/li&gt;
+&lt;li&gt;Syntax highlighting, courtesy Pygments (the Python-based code snippet highlighter)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;lanyon-features&#34;&gt;Lanyon features&lt;/h3&gt;
+&lt;p&gt;In addition to the features of Poole, Lanyon adds the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Toggleable sliding sidebar (built with only CSS) via &lt;strong&gt;☰&lt;/strong&gt; link in top corner&lt;/li&gt;
+&lt;li&gt;Sidebar includes support for textual modules and a dynamically generated navigation with active link support&lt;/li&gt;
+&lt;li&gt;Two orientations for content and sidebar, default (left sidebar) and &lt;a href=&#34;https://github.com/poole/lanyon#reverse-layout&#34;&gt;reverse&lt;/a&gt; (right sidebar), available via &lt;code&gt;&amp;lt;body&amp;gt;&lt;/code&gt; classes&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/poole/lanyon#themes&#34;&gt;Eight optional color schemes&lt;/a&gt;, available via &lt;code&gt;&amp;lt;body&amp;gt;&lt;/code&gt; classes&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/poole/lanyon#readme&#34;&gt;Head to the readme&lt;/a&gt; to learn more.&lt;/p&gt;
+&lt;h3 id=&#34;browser-support&#34;&gt;Browser support&lt;/h3&gt;
+&lt;p&gt;Lanyon is by preference a forward-thinking project. In addition to the latest versions of Chrome, Safari (mobile and desktop), and Firefox, it is only compatible with Internet Explorer 9 and above.&lt;/p&gt;
+&lt;h3 id=&#34;download&#34;&gt;Download&lt;/h3&gt;
+&lt;p&gt;Lanyon is developed on and hosted with GitHub. Head to the &lt;!-- raw HTML omitted --&gt;GitHub repository&lt;!-- raw HTML omitted --&gt; for downloads, bug reports, and features requests.&lt;/p&gt;
+&lt;p&gt;Thanks!&lt;/p&gt;
+</description>
+      </item>
+    
+      <item>
+        <title>Example content</title>
+        <link>http://richfairhurst.co.uk/post/2014/01/example-content/</link>
+        <pubDate>Wed, 01 Jan 2014 00:00:00 UTC</pubDate>
+        <author></author>
+        <guid>http://richfairhurst.co.uk/post/2014/01/example-content/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;Cum sociis natoque penatibus et magnis &lt;!-- raw HTML omitted --&gt;dis parturient montes&lt;!-- raw HTML omitted --&gt;, nascetur ridiculus mus. &lt;em&gt;Aenean eu leo quam.&lt;/em&gt; Pellentesque ornare sem lacinia quam venenatis vestibulum. Sed posuere consectetur est at lobortis. Cras mattis consectetur purus sit amet fermentum.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Curabitur blandit tempus porttitor. Nullam quis risus eget urna mollis ornare vel eu leo. Nullam id dolor id nibh ultricies vehicula ut id elit.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Etiam porta &lt;strong&gt;sem malesuada magna&lt;/strong&gt; mollis euismod. Cras mattis consectetur purus sit amet fermentum. Aenean lacinia bibendum nulla sed consectetur.&lt;/p&gt;
+&lt;h2 id=&#34;inline-html-elements&#34;&gt;Inline HTML elements&lt;/h2&gt;
+&lt;p&gt;HTML defines a long list of available inline tags, a complete list of which can be found on the &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/HTML/Element&#34;&gt;Mozilla Developer Network&lt;/a&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;To bold text&lt;/strong&gt;, use &lt;code&gt;&amp;lt;strong&amp;gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;To italicize text&lt;/em&gt;, use &lt;code&gt;&amp;lt;em&amp;gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Abbreviations, like &lt;!-- raw HTML omitted --&gt;HTML&lt;!-- raw HTML omitted --&gt; should use &lt;code&gt;&amp;lt;abbr&amp;gt;&lt;/code&gt;, with an optional &lt;code&gt;title&lt;/code&gt; attribute for the full phrase.&lt;/li&gt;
+&lt;li&gt;Citations, like &lt;!-- raw HTML omitted --&gt;— Mark otto&lt;!-- raw HTML omitted --&gt;, should use &lt;code&gt;&amp;lt;cite&amp;gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;!-- raw HTML omitted --&gt;Deleted&lt;!-- raw HTML omitted --&gt; text should use &lt;code&gt;&amp;lt;del&amp;gt;&lt;/code&gt; and &lt;!-- raw HTML omitted --&gt;inserted&lt;!-- raw HTML omitted --&gt; text should use &lt;code&gt;&amp;lt;ins&amp;gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Superscript &lt;!-- raw HTML omitted --&gt;text&lt;!-- raw HTML omitted --&gt; uses &lt;code&gt;&amp;lt;sup&amp;gt;&lt;/code&gt; and subscript &lt;!-- raw HTML omitted --&gt;text&lt;!-- raw HTML omitted --&gt; uses &lt;code&gt;&amp;lt;sub&amp;gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Most of these elements are styled by browsers with few modifications on our part.&lt;/p&gt;
+&lt;h2 id=&#34;heading&#34;&gt;Heading&lt;/h2&gt;
+&lt;p&gt;Vivamus sagittis lacus vel augue rutrum faucibus dolor auctor. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.&lt;/p&gt;
+&lt;h3 id=&#34;code&#34;&gt;Code&lt;/h3&gt;
+&lt;p&gt;Cum sociis natoque penatibus et magnis dis &lt;code&gt;code element&lt;/code&gt; montes, nascetur ridiculus mus.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Example can be run directly in your JavaScript console
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;// Create a function that takes two arguments and returns the sum of those arguments
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;adder&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Function(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;a&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;b&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;return a + b&amp;#34;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;// Call the function
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;adder&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;);
+&lt;span style=&#34;color:#75715e&#34;&gt;// &amp;gt; 8
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Aenean lacinia bibendum nulla sed consectetur. Etiam porta sem malesuada magna mollis euismod. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa.&lt;/p&gt;
+&lt;h3 id=&#34;lists&#34;&gt;Lists&lt;/h3&gt;
+&lt;p&gt;Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean lacinia bibendum nulla sed consectetur. Etiam porta sem malesuada magna mollis euismod. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Praesent commodo cursus magna, vel scelerisque nisl consectetur et.&lt;/li&gt;
+&lt;li&gt;Donec id elit non mi porta gravida at eget metus.&lt;/li&gt;
+&lt;li&gt;Nulla vitae elit libero, a pharetra augue.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Donec ullamcorper nulla non metus auctor fringilla. Nulla vitae elit libero, a pharetra augue.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Vestibulum id ligula porta felis euismod semper.&lt;/li&gt;
+&lt;li&gt;Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.&lt;/li&gt;
+&lt;li&gt;Maecenas sed diam eget risus varius blandit sit amet non magna.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Cras mattis consectetur purus sit amet fermentum. Sed posuere consectetur est at lobortis.&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Nullam quis risus eget urna mollis ornare vel eu leo.&lt;/p&gt;
+&lt;h3 id=&#34;tables&#34;&gt;Tables&lt;/h3&gt;
+&lt;p&gt;Aenean lacinia bibendum nulla sed consectetur. Lorem ipsum dolor sit amet, consectetur adipiscing elit.&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;Nullam id dolor id nibh ultricies vehicula ut id elit. Sed posuere consectetur est at lobortis. Nullam quis risus eget urna mollis ornare vel eu leo.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;Want to see something else added? &lt;!-- raw HTML omitted --&gt;Open an issue.&lt;!-- raw HTML omitted --&gt;&lt;/p&gt;
+</description>
+      </item>
+    
+      <item>
+        <title>What&#39;s Jekyll?</title>
+        <link>http://richfairhurst.co.uk/post/2013/12/whats-jekyll/</link>
+        <pubDate>Tue, 31 Dec 2013 00:00:00 UTC</pubDate>
+        <author></author>
+        <guid>http://richfairhurst.co.uk/post/2013/12/whats-jekyll/</guid>
+        <description>&lt;p&gt;&lt;a href=&#34;http://jekyllrb.com&#34;&gt;Jekyll&lt;/a&gt; is a static site generator, an open-source tool for creating simple yet powerful websites of all shapes and sizes. From &lt;a href=&#34;https://github.com/mojombo/jekyll/blob/master/README.markdown&#34;&gt;the project&amp;rsquo;s readme&lt;/a&gt;:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Jekyll is a simple, blog aware, static site generator. It takes a template directory [&amp;hellip;] and spits out a complete, static website suitable for serving with Apache or your favorite web server. This is also the engine behind GitHub Pages, which you can use to host your project’s page or blog right here from GitHub.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;It&amp;rsquo;s an immensely useful tool and one we encourage you to use here with Hyde.&lt;/p&gt;
+&lt;p&gt;Find out more by &lt;a href=&#34;https://github.com/mojombo/jekyll&#34;&gt;visiting the project on GitHub&lt;/a&gt;.&lt;/p&gt;
+</description>
+      </item>
+    
+
+  </channel>
+</rss>

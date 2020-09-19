@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/about/</loc>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/post/</loc>
+    <lastmod>2014-12-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/archive/</loc>
+    <lastmod>2013-12-31T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/post/2014/12/bsides-london-2014-challenge-1/</loc>
+    <lastmod>2014-12-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/post/2014/07/coursera-reverse-challenge/</loc>
+    <lastmod>2014-07-23T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/post/2014/01/introducing-lanyon/</loc>
+    <lastmod>2014-01-02T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/post/2014/01/example-content/</loc>
+    <lastmod>2014-01-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/</loc>
+    <lastmod>2013-12-31T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/post/2013/12/whats-jekyll/</loc>
+    <lastmod>2013-12-31T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/month/</loc>
+  </url>
+  
+  <url>
+    <loc>http://richfairhurst.co.uk/year/</loc>
+  </url>
+  
+</urlset>

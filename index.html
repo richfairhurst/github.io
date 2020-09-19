@@ -2,6 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 
   <head>
+	<meta name="generator" content="Hugo 0.69.0" />
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 
 
@@ -10,7 +11,7 @@
 
   <title>
     
-      404 Page not found &middot;  Rich Fairhurst 
+       &middot; Rich Fairhurst 
     
   </title>
 
@@ -42,7 +43,7 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a class="sidebar-nav-item " href="/">Home</a>
+    <a class="sidebar-nav-item  active " href="/">Home</a>
     <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/about/">About</a>
       <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/post/">Posts</a>
       <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/archive/">Archive</a>
@@ -61,16 +62,45 @@
       <div class="container content">
 
 
-<div class="page">
-  <h1 class="page-title">404</h1>
-  <p>Sorry, we&rsquo;ve misplaced that URL or it&rsquo;s pointing to something that doesn&rsquo;t exist. <a href="/">Head back home</a> to try finding it again.</p>
+
+<body>
+    
+<br>
+      <div class="container content">
+        <div class="page">
+  <h1 class="page-title"></h1>
+  <div id="name" class="center">Rich Fairhurst</div>
+
+<p>I cyber all the things. I ocassionally <a href="/archive">blog</a> and sometimes take <a href="https://www.instagram.com/richfairhurst" target="_blank">pictures</a> and do other stuff</p>
+
+
+<div style="position: relative; text-align: left">
+<p style="position: relative; bottom: 0; width:100%;">
+
+</div>
+
 </div>
 
       </div>
-    </div>
 
-    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
-    
+ <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script>
+      (function(document) {
+        var toggle = document.querySelector('.sidebar-toggle');
+        var sidebar = document.querySelector('#sidebar');
+        var checkbox = document.querySelector('#sidebar-checkbox');
+
+        document.addEventListener('click', function(e) {
+          var target = e.target;
+
+          if(!checkbox.checked ||
+             sidebar.contains(target) ||
+             (target === checkbox || target === toggle)) return;
+
+          checkbox.checked = false;
+        }, false);
+      })(document);
+    </script>
   </body>
 </html>
-
