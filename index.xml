@@ -5,7 +5,7 @@
     <language>en-us</language>
     <author></author>
     <rights>(C) 2014</rights>
-    <updated>2013-12-31 00:00:00 &#43;0000 UTC</updated>
+    <updated>2014-12-14 00:00:00 &#43;0000 UTC</updated>
 
     
       <item>
@@ -127,7 +127,7 @@ malfor&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;cw, Version &lt;sp
 &lt;p&gt;When analyzing the software, repeated requests were made to the ghowen.me server over the course of two weeks to try and identify the full list and pattern of group names returned. The following tables lists the dates and the response received when making a request to the website.&lt;/p&gt;
 &lt;!-- raw HTML omitted --&gt;
 &lt;p&gt;Based on this two week review it is reasonable to conclude that the website returns a specific chat-room based on the day of the week.&lt;/p&gt;
-&lt;p&gt;Browsing the website at ghowen.me the domain appears to be owned by Gareth Owen a university lecturer at Portsmouth University in the UK and hosted at a virtual server at &lt;a href=&#34;http://www.tagadab.com&#34;&gt;Tagabab&lt;/a&gt;. This was confirmed by the whois information. While the domain was registered under the company name of ‘XYZ Circuits Ltd’ and and an individual of ‘Larry Bevois&amp;rsquo;, the email address used ties back to Gareth Owen’s gmail email account, used elsewhere. In addition the address used in the registration is also part of the University of Portsmouth campus. The website appears to be 3  - 4 month old according to on-line web archives such at Netcraft.&lt;/p&gt;
+&lt;p&gt;Browsing the website at ghowen.me the domain appears to be owned by Gareth Owen a university lecturer at Portsmouth University in the UK and hosted at a virtual server at &lt;a href=&#34;http://www.tagadab.com&#34;&gt;Tagabab&lt;/a&gt;. This was confirmed by the whois information. While the domain was registered under the company name of ‘XYZ Circuits Ltd’ and and an individual of ‘Larry Bevois&#39;, the email address used ties back to Gareth Owen’s gmail email account, used elsewhere. In addition the address used in the registration is also part of the University of Portsmouth campus. The website appears to be 3  - 4 month old according to on-line web archives such at Netcraft.&lt;/p&gt;
 &lt;h3 id=&#34;7-irc-communication&#34;&gt;7. IRC Communication&lt;/h3&gt;
 &lt;p&gt;Having gathered the irc chat room information from the ghowen.me website the executable attempts to join the IRC server irc.efnet.fr. Each time the executable was run during analyses this connection was dropped from the server with the error message ‘You are not authorized to use this server’. This is probably because the analysis is being performed in the UK.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/malware6.png&#34; alt=&#34;My helpful screenshot&#34;&gt;&lt;/p&gt;
@@ -233,7 +233,7 @@ write(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&
 &lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge4.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;The exit function should never be reached now as the unconditional jump should completely ignore it and we should be able to run the program in a debugger without any issues&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge5.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
-&lt;p&gt;Now we take take a look at what the executable is doing. A good place to start is the &amp;ldquo;Are you feeling lucky today?&amp;rdquo; string, since it&amp;rsquo;s a fair assumption that the executable will be looking for input at this point which will determine the output of the program.  We see a bunch of &lt;strong&gt;cmp&lt;/strong&gt; and &lt;strong&gt;jz&lt;/strong&gt;&amp;lsquo;s that look interesting&amp;hellip;&lt;/p&gt;
+&lt;p&gt;Now we take take a look at what the executable is doing. A good place to start is the &amp;ldquo;Are you feeling lucky today?&amp;rdquo; string, since it&amp;rsquo;s a fair assumption that the executable will be looking for input at this point which will determine the output of the program.  We see a bunch of &lt;strong&gt;cmp&lt;/strong&gt; and &lt;strong&gt;jz&lt;/strong&gt;&amp;rsquo;s that look interesting&amp;hellip;&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge6.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Lets also have a look at the &lt;strong&gt;@EHJ~@DZEL&lt;/strong&gt; string that looks XOR like-ish&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;http://richfairhurst.co.uk/images/reverse-challenge7.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;

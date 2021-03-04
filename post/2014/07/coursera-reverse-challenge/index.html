@@ -44,6 +44,7 @@
   <nav class="sidebar-nav">
     <a class="sidebar-nav-item " href="/">Home</a>
     <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/about/">About</a>
+      <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/bookshelf/">Bookshelf</a>
       <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/post/">Posts</a>
       <a class="sidebar-nav-item " href="http://richfairhurst.co.uk/archive/">Archive</a>
       </nav>
@@ -111,7 +112,7 @@ write(<span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#34;Dud
 <p><img src="/images/reverse-challenge4.png" alt=""></p>
 <p>The exit function should never be reached now as the unconditional jump should completely ignore it and we should be able to run the program in a debugger without any issues</p>
 <p><img src="/images/reverse-challenge5.png" alt=""></p>
-<p>Now we take take a look at what the executable is doing. A good place to start is the &ldquo;Are you feeling lucky today?&rdquo; string, since it&rsquo;s a fair assumption that the executable will be looking for input at this point which will determine the output of the program.  We see a bunch of <strong>cmp</strong> and <strong>jz</strong>&lsquo;s that look interesting&hellip;</p>
+<p>Now we take take a look at what the executable is doing. A good place to start is the &ldquo;Are you feeling lucky today?&rdquo; string, since it&rsquo;s a fair assumption that the executable will be looking for input at this point which will determine the output of the program.  We see a bunch of <strong>cmp</strong> and <strong>jz</strong>&rsquo;s that look interesting&hellip;</p>
 <p><img src="/images/reverse-challenge6.png" alt=""></p>
 <p>Lets also have a look at the <strong>@EHJ~@DZEL</strong> string that looks XOR like-ish</p>
 <p><img src="/images/reverse-challenge7.png" alt=""></p>
